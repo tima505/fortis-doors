@@ -401,7 +401,7 @@ class Component extends DCLogic {
     const src = vip ? VIP : STANDARD;
     return src.map((d, i) => ({
       slot: (vip ? "vip-" : "std-") + i,
-      photo: d.photo || ("images/door-" + (i % 4 + 1) + ".webp"),
+      photo: d.photo || "",
       name: d.name,
       short: d.short,
       placeholder: "Фото двери",
@@ -413,7 +413,7 @@ class Component extends DCLogic {
       open: () => this.setState({
         active: {
           slot: (vip ? "vip-" : "std-") + i,
-      photo: d.photo || ("images/door-" + (i % 4 + 1) + ".webp"),
+      photo: d.photo || "",
           name: d.name,
           badge: vip ? "VIP-серия · под заказ" : "Классика · со склада материалов",
           placeholder: "Фото двери",
