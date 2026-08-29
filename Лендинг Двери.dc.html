@@ -205,15 +205,16 @@
   <section class="sec sec-catalog" id="catalog" style="max-width:1320px;margin:0 auto;padding:110px 32px 40px">
     <div class="sec-head" data-reveal="1" style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap;margin-bottom:52px">
       <div>
-        <div style="font-size:11px;letter-spacing:0.32em;color:#8E8A82;text-transform:uppercase;margin-bottom:18px">Каталог · 71 моделей</div>
+        <div style="font-size:11px;letter-spacing:0.32em;color:#8E8A82;text-transform:uppercase;margin-bottom:18px">Каталог · {{ nAll }} моделей</div>
         <h2 class="h2" style="font-family:Unbounded,sans-serif;font-weight:300;font-size:44px;line-height:1.1;margin:0;letter-spacing:-0.015em">Выберите модель<br />под свой проём</h2>
       </div>
       <p style="font-size:15px;line-height:1.6;color:#8E8A82;max-width:340px;margin:0">Нажмите на любую дверь — откроется карточка с размерами, отделкой и комплектацией.</p>
     </div>
 
     <div class="tabs" data-reveal="1" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:44px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0">
-      <button onClick="{{ selectStandard }}" style="{{ tabStandardStyle }}">Обычные двери <span style="opacity:0.5;font-size:12px">30</span></button>
-      <button onClick="{{ selectVip }}" style="{{ tabVipStyle }}">VIP-серия <span style="opacity:0.5;font-size:12px">41</span></button>
+      <button onClick="{{ selectEconom }}" style="{{ tabEconomStyle }}">Эконом <span style="opacity:0.5;font-size:12px">{{ nEcon }}</span></button>
+      <button onClick="{{ selectStandard }}" style="{{ tabStandardStyle }}">Стандарт <span style="opacity:0.5;font-size:12px">{{ nStd }}</span></button>
+      <button onClick="{{ selectVip }}" style="{{ tabVipStyle }}">VIP-серия <span style="opacity:0.5;font-size:12px">{{ nVip }}</span></button>
     </div>
 
     <div class="cards" id="vip" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:28px">
@@ -233,6 +234,14 @@
         </div>
       </sc-for>
     </div>
+
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid rgba(255,255,255,0.08);padding:64px 32px;text-align:center">
+        <div style="font-family:Unbounded,sans-serif;font-weight:300;font-size:24px;margin-bottom:14px">Линия готовится</div>
+        <p style="font-size:15px;line-height:1.6;color:#8E8A82;max-width:420px;margin:0 auto 28px">Модели эконом-линии скоро появятся здесь. Позвоните — подберём вариант под ваш бюджет и размер проёма.</p>
+        <a href="#contacts" style="display:inline-block;background:#C1975B;color:#0C0C0D;padding:14px 28px;font-size:14px;font-weight:600;letter-spacing:0.04em;transition:all 350ms" style-hover="background:#E3C48F">Подобрать по бюджету</a>
+      </div>
+    </sc-if>
   </section>
 
   <section class="sec" id="garanty" style="max-width:1320px;margin:0 auto;padding:110px 32px">
@@ -338,7 +347,10 @@
 </div>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;defaultCategory&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Обычные&quot;,&quot;VIP&quot;],&quot;default&quot;:&quot;Обычные&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Каталог&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultCategory&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Эконом&quot;,&quot;Обычные&quot;,&quot;VIP&quot;],&quot;default&quot;:&quot;Обычные&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Каталог&quot;}}">
+const ECONOM = [
+];
+
 const STANDARD = [
   { name: "САЙРАМ", short: "Круглый медальон, ажурная фрамуга", photo: "images/std-01.webp", description: "Двустворчатая дверь с круглым медальоном по центру и ажурной фрамугой с растительным узором. Боковые панели набраны горизонтальными планками.", specs: [["Тип", "Входная дверь"], ["Стиль", "классика"], ["Отделка", "накладной медальон"], ["Размер", "по вашему проёму"]] },
   { name: "АРАЙ", short: "Синие акценты, рельефное полотно", photo: "images/std-02.webp", description: "Тот же силуэт, что у САЙРАМ, но с синими вставками в медальоне и нижних филёнках. Полотно с мелкой рельефной фактурой.", specs: [["Тип", "Входная дверь"], ["Стиль", "классика"], ["Отделка", "цветные вставки"], ["Размер", "по вашему проёму"]] },
@@ -420,29 +432,39 @@ class Component extends DCLogic {
   state = { cat: null, active: null };
 
   get cat() {
-    return this.state.cat || (this.props.defaultCategory === "VIP" ? "vip" : "std");
+    if (this.state.cat) return this.state.cat;
+    if (this.props.defaultCategory === "VIP") return "vip";
+    if (this.props.defaultCategory === "Эконом") return "eco";
+    return "std";
+  }
+
+  get list() {
+    return this.cat === "vip" ? VIP : this.cat === "eco" ? ECONOM : STANDARD;
   }
 
   build() {
-    const vip = this.cat === "vip";
-    const src = vip ? VIP : STANDARD;
-    return src.map((d, i) => ({
-      slot: (vip ? "vip-" : "std-") + i,
+    const cat = this.cat;
+    const badge = cat === "vip" ? "VIP-серия" : cat === "eco" ? "Эконом" : "Классика";
+    const badgeLong = cat === "vip" ? "VIP-серия · под заказ"
+      : cat === "eco" ? "Эконом · базовая комплектация"
+      : "Классика · со склада материалов";
+    return this.list.map((d, i) => ({
+      slot: cat + "-" + i,
       photo: d.photo || "",
       name: d.name,
       short: d.short,
       placeholder: "Фото двери",
-      badge: vip ? "VIP-серия" : "Классика",
-      badgeBg: vip ? "rgba(193,151,91,0.92)" : "rgba(12,12,13,0.72)",
-      badgeColor: vip ? "#0C0C0D" : "#C9C5BD",
+      badge: badge,
+      badgeBg: cat === "vip" ? "rgba(193,151,91,0.92)" : "rgba(12,12,13,0.72)",
+      badgeColor: cat === "vip" ? "#0C0C0D" : "#C9C5BD",
       description: d.description,
       specs: d.specs.map(([k, v]) => ({ k: k, v: v })),
       open: () => this.setState({
         active: {
-          slot: (vip ? "vip-" : "std-") + i,
+          slot: cat + "-" + i,
       photo: d.photo || "",
           name: d.name,
-          badge: vip ? "VIP-серия · под заказ" : "Классика · со склада материалов",
+          badge: badgeLong,
           placeholder: "Фото двери",
           description: d.description,
           specs: d.specs.map(([k, v]) => ({ k: k, v: v }))
@@ -477,12 +499,20 @@ class Component extends DCLogic {
   }
 
   renderVals() {
-    const vip = this.cat === "vip";
+    const cat = this.cat;
+    const doors = this.build();
     return {
-      doors: this.build(),
+      doors: doors,
+      isEmpty: doors.length === 0,
       active: this.state.active,
-      tabStandardStyle: this.tab(!vip),
-      tabVipStyle: this.tab(vip),
+      nEcon: ECONOM.length,
+      nStd: STANDARD.length,
+      nVip: VIP.length,
+      nAll: ECONOM.length + STANDARD.length + VIP.length,
+      tabEconomStyle: this.tab(cat === "eco"),
+      tabStandardStyle: this.tab(cat === "std"),
+      tabVipStyle: this.tab(cat === "vip"),
+      selectEconom: () => this.setState({ cat: "eco" }),
       selectStandard: () => this.setState({ cat: "std" }),
       selectVip: () => this.setState({ cat: "vip" }),
       close: () => this.setState({ active: null }),
