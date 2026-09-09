@@ -119,7 +119,12 @@
     /* Три вкладки должны влезать в строку: на 390px они в сумме ~306px
        при доступных ~358. Ниже 330px строка переполняется и flex-wrap
        переносит VIP вниз — это осознанный запасной вариант. */
-    .tabs { gap: 2px !important; }
+    /* Четыре вкладки в строку на телефон не помещаются. Вместо переноса —
+       горизонтальная лента: строка одна, лишнее пролистывается пальцем. */
+    .tabs { gap: 2px !important; flex-wrap: nowrap !important;
+            overflow-x: auto !important; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabs button { flex: 0 0 auto; }
     .tabs button { font-size: 11.5px !important; padding: 11px 7px !important; letter-spacing: 0 !important; }
     .tabs button span { font-size: 10px !important; }
     .cards { grid-template-columns: minmax(0, 1fr) !important; }
@@ -220,6 +225,7 @@
       <button onClick="{{ selectEconom }}" style="{{ tabEconomStyle }}">Эконом <span style="opacity:0.5;font-size:12px">{{ nEcon }}</span></button>
       <button onClick="{{ selectStandard }}" style="{{ tabStandardStyle }}">Стандарт <span style="opacity:0.5;font-size:12px">{{ nStd }}</span></button>
       <button onClick="{{ selectVip }}" style="{{ tabVipStyle }}">VIP-серия <span style="opacity:0.5;font-size:12px">{{ nVip }}</span></button>
+      <button onClick="{{ selectKalitka }}" style="{{ tabKalitkaStyle }}">Калитки <span style="opacity:0.5;font-size:12px">{{ nKal }}</span></button>
     </div>
 
     <div class="cards" id="vip" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:28px">
@@ -243,7 +249,7 @@
     <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
       <div style="border:1px solid rgba(255,255,255,0.08);padding:64px 32px;text-align:center">
         <div style="font-family:Unbounded,sans-serif;font-weight:300;font-size:24px;margin-bottom:14px">Линия готовится</div>
-        <p style="font-size:15px;line-height:1.6;color:#8E8A82;max-width:420px;margin:0 auto 28px">Модели эконом-линии скоро появятся здесь. Позвоните — подберём вариант под ваш бюджет и размер проёма.</p>
+        <p style="font-size:15px;line-height:1.6;color:#8E8A82;max-width:420px;margin:0 auto 28px">Модели этой линии скоро появятся здесь. Позвоните — подберём вариант под ваш бюджет и размер проёма.</p>
         <a href="#contacts" style="display:inline-block;background:#C1975B;color:#0C0C0D;padding:14px 28px;font-size:14px;font-weight:600;letter-spacing:0.04em;transition:all 350ms" style-hover="background:#E3C48F">Подобрать по бюджету</a>
       </div>
     </sc-if>
@@ -353,6 +359,11 @@
 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultCategory&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Эконом&quot;,&quot;Обычные&quot;,&quot;VIP&quot;],&quot;default&quot;:&quot;Обычные&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Каталог&quot;}}">
+const KALITKA = [
+  { name: "ТЫНЫС", short: "Вертикальный рифт, светлая рамка", photo: "images/eco-n03.webp", description: "Гладкая створка с вертикальным рифтом и узкой вставкой по центру. Спокойная геометрия без декора.", specs: [["Тип", "Входная группа"], ["Стиль", "минимализм"], ["Отделка", "вертикальный рифт"], ["Размер", "по вашему проёму"]] },
+  { name: "КОРГАН", short: "Прямые филёнки без декора", photo: "images/eco-n05.webp", description: "Простые прямоугольные филёнки в два ряда, ровная обвязка. Практичный вариант для двора.", specs: [["Тип", "Входная группа"], ["Стиль", "минимализм"], ["Отделка", "прямые филёнки"], ["Размер", "по вашему проёму"]] }
+];
+
 const ECONOM = [
   { name: "ТЕМИР", short: "Горизонтальные планки, круг в центре", photo: "images/vipd-04.webp", description: "Строгие горизонтальные планки, круглый элемент в центре створок и рифлёная фрамуга над проёмом.", specs: [["Тип", "Входная группа"], ["Стиль", "модерн"], ["Отделка", "планки, круг"], ["Размер", "по вашему проёму"]] },
   { name: "КРИСТАЛЛ", short: "Геометрия и стекло", photo: "images/vipd-12.webp", description: "Графитовое полотно с гранёными филёнками и вертикальными стеклянными вставками с геометрическим рисунком.", specs: [["Тип", "Входная группа"], ["Стиль", "модерн"], ["Отделка", "геометрия, стекло"], ["Размер", "по вашему проёму"]] },
@@ -371,9 +382,7 @@ const ECONOM = [
   { name: "КУРЕН", short: "Тёплый орех и золотой меандр", photo: "images/std-16.webp", description: "Тёплый ореховый тон филёнок, чёрная обвязка и золотой меандр по краю створок.", specs: [["Тип", "Входная дверь"], ["Стиль", "классика"], ["Отделка", "орех, золотой меандр"], ["Размер", "по вашему проёму"]] },
   { name: "ЖАЙЛЫ", short: "Гладкие филёнки, простая рамка", photo: "images/eco-n01.webp", description: "Базовое решение: крупные гладкие филёнки, ровная обвязка и накладная планка по верху. Ничего лишнего.", specs: [["Тип", "Входная группа"], ["Стиль", "минимализм"], ["Отделка", "гладкие филёнки"], ["Размер", "по вашему проёму"]] },
   { name: "НАКЫШ", short: "Овальные вставки с завитком", photo: "images/eco-n02.webp", description: "Тёплое коричневое полотно с овальными вставками и накладным завитком в центре каждой створки.", specs: [["Тип", "Входная группа"], ["Стиль", "классика"], ["Отделка", "накладной узор"], ["Размер", "по вашему проёму"]] },
-  { name: "ТЫНЫС", short: "Вертикальный рифт, светлая рамка", photo: "images/eco-n03.webp", description: "Гладкая створка с вертикальным рифтом и узкой вставкой по центру. Спокойная геометрия без декора.", specs: [["Тип", "Входная группа"], ["Стиль", "минимализм"], ["Отделка", "вертикальный рифт"], ["Размер", "по вашему проёму"]] },
   { name: "АЙБАР", short: "Круг в центре, накладки по краям", photo: "images/eco-n04.webp", description: "Круглый элемент по центру створок, гладкие филёнки и накладные планки по периметру.", specs: [["Тип", "Входная группа"], ["Стиль", "модерн"], ["Отделка", "круглый центр"], ["Размер", "по вашему проёму"]] },
-  { name: "КОРГАН", short: "Прямые филёнки без декора", photo: "images/eco-n05.webp", description: "Простые прямоугольные филёнки в два ряда, ровная обвязка. Практичный вариант для двора.", specs: [["Тип", "Входная группа"], ["Стиль", "минимализм"], ["Отделка", "прямые филёнки"], ["Размер", "по вашему проёму"]] },
   { name: "ШЕНБЕР", short: "Кольцо в центре, решётчатый верх", photo: "images/eco-n06.webp", description: "Кольцо по центру створок, ажурная фрамуга над проёмом и рельефные накладки по бокам.", specs: [["Тип", "Входная группа"], ["Стиль", "модерн"], ["Отделка", "кольцо, ажур"], ["Размер", "по вашему проёму"]] },
   { name: "КУМБЕЗ", short: "Медные филёнки в тёмной обвязке", photo: "images/eco-n07.webp", description: "Медно-коричневые филёнки в тёмной обвязке, ряды одинаковых полей по всей высоте.", specs: [["Тип", "Входная группа"], ["Стиль", "классика"], ["Отделка", "медные филёнки"], ["Размер", "по вашему проёму"]] },
   { name: "ТОРША", short: "Сетчатые овалы, бронза", photo: "images/eco-n08.webp", description: "Бронзовое полотно с овальными вставками, забранными мелкой сеткой, и резным фризом сверху.", specs: [["Тип", "Входная группа"], ["Стиль", "классика"], ["Отделка", "сетчатые вставки"], ["Размер", "по вашему проёму"]] },
@@ -471,18 +480,24 @@ class Component extends DCLogic {
     if (this.state.cat) return this.state.cat;
     if (this.props.defaultCategory === "VIP") return "vip";
     if (this.props.defaultCategory === "Эконом") return "eco";
+    if (this.props.defaultCategory === "Калитки") return "kal";
     return "std";
   }
 
   get list() {
-    return this.cat === "vip" ? VIP : this.cat === "eco" ? ECONOM : STANDARD;
+    return this.cat === "vip" ? VIP
+      : this.cat === "eco" ? ECONOM
+      : this.cat === "kal" ? KALITKA
+      : STANDARD;
   }
 
   build() {
     const cat = this.cat;
-    const badge = cat === "vip" ? "VIP-серия" : cat === "eco" ? "Эконом" : "Классика";
+    const badge = cat === "vip" ? "VIP-серия" : cat === "eco" ? "Эконом"
+      : cat === "kal" ? "Калитка" : "Классика";
     const badgeLong = cat === "vip" ? "VIP-серия · под заказ"
       : cat === "eco" ? "Эконом · базовая комплектация"
+      : cat === "kal" ? "Калитка · отдельный вход"
       : "Классика · со склада материалов";
     return this.list.map((d, i) => ({
       slot: cat + "-" + i,
@@ -541,14 +556,17 @@ class Component extends DCLogic {
       doors: doors,
       isEmpty: doors.length === 0,
       active: this.state.active,
+      nKal: KALITKA.length,
       nEcon: ECONOM.length,
       nStd: STANDARD.length,
       nVip: VIP.length,
-      nAll: ECONOM.length + STANDARD.length + VIP.length,
+      nAll: KALITKA.length + ECONOM.length + STANDARD.length + VIP.length,
       tabEconomStyle: this.tab(cat === "eco"),
+      tabKalitkaStyle: this.tab(cat === "kal"),
       tabStandardStyle: this.tab(cat === "std"),
       tabVipStyle: this.tab(cat === "vip"),
       selectEconom: () => this.setState({ cat: "eco" }),
+      selectKalitka: () => this.setState({ cat: "kal" }),
       selectStandard: () => this.setState({ cat: "std" }),
       selectVip: () => this.setState({ cat: "vip" }),
       close: () => this.setState({ active: null }),
